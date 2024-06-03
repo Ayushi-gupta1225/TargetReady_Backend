@@ -15,4 +15,3 @@ public class ShelfOccupancy {
     private int shelfId;
     private int occupancy;
 }
-
