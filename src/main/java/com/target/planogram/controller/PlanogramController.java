@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -29,8 +32,12 @@ public class PlanogramController {
         }
     }
 
-    @GetMapping("/place")
-    public ResponseEntity<String> getPlaceEndpoint() {
-        return ResponseEntity.ok("This is a POST endpoint. Please use a POST request.");
+    @GetMapping("/data")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<Map<String, Object>> getData() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("locations", planogramService.getAllLocations());
+        data.put("products", planogramService.getAllProducts());
+        return ResponseEntity.ok(data);
     }
 }

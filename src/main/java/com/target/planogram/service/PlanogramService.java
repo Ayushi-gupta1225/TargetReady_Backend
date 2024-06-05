@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,7 @@ public class PlanogramService {
     @Autowired
     private ShelfOccupancyRepository shelfOccupancyRepository;
 
-    private static final int SHELF_CAPACITY = 50;
+    private static final int SHELF_CAPACITY = 90;
 
     @Transactional
     public String placeProduct(Product product, int productRow, int productSection, int quantity) {
@@ -58,5 +59,13 @@ public class PlanogramService {
         locationRepository.save(location);
 
         return "Product placed successfully";
+    }
+
+    public List<Location> getAllLocations() {
+        return locationRepository.findAll();
+    }
+
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 }
