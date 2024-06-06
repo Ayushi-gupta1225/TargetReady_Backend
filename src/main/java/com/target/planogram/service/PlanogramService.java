@@ -28,24 +28,31 @@ public class PlanogramService {
     private ShelfOccupancyRepository shelfOccupancyRepository;
 
     private static final int SHELF_CAPACITY = 90;
+    private static final int SHELF_MAX_HEIGHT = 45;
 
     @Transactional
     public String placeProduct(Product product, int productRow, int productSection, int quantity) {
         Optional<Product> productOpt = productRepository.findById(product.getProductId());
-        if (productOpt.isEmpty()) {
-            productRepository.save(product);
-        } else {
-            product = productOpt.get();
-        }
 
         int shelfId = (productRow - 1) * 3 + productSection;
 
         ShelfOccupancy shelfOccupancy = shelfOccupancyRepository.findById(shelfId).orElse(new ShelfOccupancy(shelfId, 0));
         int currentOccupancy = shelfOccupancy.getOccupancy();
+        int productHeight = product.getHeight();
 
         int totalProductBreadth = product.getBreadth() * quantity;
         if (currentOccupancy + totalProductBreadth > SHELF_CAPACITY) {
             return "Shelf capacity exceeded";
+        }
+
+        if (productHeight > SHELF_MAX_HEIGHT) {
+            return "Shelf height exceeded";
+        }
+
+        if (productOpt.isEmpty()) {
+            productRepository.save(product);
+        } else {
+            product = productOpt.get();
         }
 
         shelfOccupancy.setOccupancy(currentOccupancy + totalProductBreadth);
