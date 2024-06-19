@@ -6,7 +6,6 @@ import com.target.planogram.entity.ShelfOccupancy;
 import com.target.planogram.repository.LocationRepository;
 import com.target.planogram.repository.ProductRepository;
 import com.target.planogram.repository.ShelfOccupancyRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,6 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-@AllArgsConstructor
 public class PlanogramService {
     @Autowired
     private ProductRepository productRepository;
