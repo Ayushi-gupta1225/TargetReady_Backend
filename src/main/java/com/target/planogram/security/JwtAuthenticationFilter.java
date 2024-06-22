@@ -21,18 +21,14 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
     @Autowired
     private JwtHelper jwtHelper;
-
     @Autowired
     private UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
         String requestHeader = request.getHeader("Authorization");
         logger.info("Header: {}", requestHeader);
 
@@ -66,7 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.info("Validation failed !!");
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }
+
+
