@@ -1,8 +1,9 @@
 package com.target.planogram.entity;
-import jakarta.persistence.*;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 
 @Entity
 @Data
@@ -20,4 +21,8 @@ public class Location {
     private int productRow;
     private int productSection;
     private int quantity;
+
+    @ManyToOne
+    @JoinColumn(name = "planogram_id")
+    private Planogram planogram;
 }

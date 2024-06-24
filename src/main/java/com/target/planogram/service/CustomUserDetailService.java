@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CustomUserDetailService implements UserDetailsService {
+
     @Autowired
     private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        //load users from database
-        return userRepository.findByUserName(username).orElseThrow(()->new RuntimeException("Invalid username"));
+        // Load users from database
+        return userRepository.findByUserName(username)
+                .orElseThrow(() -> new RuntimeException("Invalid username"));
     }
 }

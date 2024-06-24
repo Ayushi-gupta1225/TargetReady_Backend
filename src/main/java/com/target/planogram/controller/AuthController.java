@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -63,5 +62,3 @@ public class AuthController {
         return new ResponseEntity<>("Invalid Password!", HttpStatus.UNAUTHORIZED);
     }
 }
-
-

@@ -5,16 +5,16 @@ import com.target.planogram.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserService {
+
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -24,7 +24,6 @@ public class UserService {
         Optional<User> existingRootUser = userRepository.findByUserName("root");
         if (existingRootUser.isEmpty()) {
             User rootUser = new User();
-            rootUser.setUserId(UUID.randomUUID().toString());
             rootUser.setUserName("root");
             rootUser.setPassword(passwordEncoder.encode("admin"));
             rootUser.setRole("ROLE_ADMIN");
@@ -38,7 +37,6 @@ public class UserService {
         if (existingUser.isPresent()) {
             throw new RuntimeException("User with username " + user.getUsername() + " already exists");
         }
-        user.setUserId(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("ROLE_USER"); // Default role for other users
         return userRepository.save(user);

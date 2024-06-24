@@ -1,4 +1,5 @@
 package com.target.planogram.config;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -15,8 +16,10 @@ import java.io.IOException;
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter implements Filter {
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
+
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse response = (HttpServletResponse) res;
@@ -25,10 +28,13 @@ public class CorsFilter implements Filter {
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin");
         response.setHeader("Access-Control-Allow-Credentials", "true");
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {response.setStatus(HttpServletResponse.SC_OK);} else {chain.doFilter(req, res);}}
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            chain.doFilter(req, res);
+        }
+    }
 
     @Override
-    public void destroy() {
-
-    }
+    public void destroy() {}
 }
