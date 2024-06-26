@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PlanogramService {
@@ -26,22 +27,32 @@ public class PlanogramService {
     @Autowired
     private PlanogramRepository planogramRepository;
 
-    private static final int SHELF_CAPACITY = 90;
-    private static final int SHELF_MAX_HEIGHT = 45;
-
     @Transactional
     public String placeProduct(Product product, int productRow, int productSection, int quantity, Long planogramId) {
-        Optional<Product> productOpt = productRepository.findByName(product.getName());
-
-        if (productOpt.isEmpty()) {
-            product = productRepository.save(product); // Save the product if it does not exist
-        } else {
-            product = productOpt.get();
-        }
-
         Planogram planogram = planogramRepository.findById(planogramId).orElse(null);
         if (planogram == null) {
             return "Planogram not found";
+        }
+
+        int SHELF_CAPACITY = planogram.getSlotWidth();
+        int SHELF_MAX_HEIGHT = planogram.getSlotHeight();
+
+        Optional<Product> productOpt = productRepository.findByName(product.getName());
+
+        if (productOpt.isPresent()) {
+            product = productOpt.get();
+        } else {
+            int productHeight = product.getHeight();
+            int totalProductBreadth = product.getBreadth() * quantity;
+
+            if (totalProductBreadth > SHELF_CAPACITY) {
+                return "Shelf capacity exceeded";
+            }
+            if (productHeight > SHELF_MAX_HEIGHT) {
+                return "Shelf height exceeded";
+            }
+
+            product = productRepository.save(product); // Save the product if it does not exist
         }
 
         int shelfId = (productRow - 1) * planogram.getNumSections() + productSection;
@@ -88,6 +99,7 @@ public class PlanogramService {
         productRepository.deleteAll(allProducts);
         planogramRepository.deleteById(planogramId);
     }
+
     public List<Location> getAllLocations(Long planogramId) {
         return locationRepository.findByPlanogramId(planogramId);
     }
@@ -98,5 +110,14 @@ public class PlanogramService {
 
     public List<Planogram> getAllPlanograms() {
         return planogramRepository.findAll();
+    }
+
+    public List<Product> getProductsByPlanogram(Long planogramId) {
+        List<Location> locations = locationRepository.findByPlanogramId(planogramId);
+        List<Product> products = locations.stream()
+                .map(Location::getProduct)
+                .distinct()
+                .collect(Collectors.toList());
+        return products;
     }
 }

@@ -66,4 +66,12 @@ public class PlanogramController {
             return ResponseEntity.badRequest().body(result);
         }
     }
+
+    @GetMapping("/planogram/{planogramId}/products")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<List<Product>> getProductsByPlanogram(@PathVariable Long planogramId) {
+        List<Product> products = planogramService.getProductsByPlanogram(planogramId);
+        return ResponseEntity.ok(products);
+    }
+
 }
