@@ -21,7 +21,7 @@ public class PlanogramController {
     @PostMapping("/admin/planogram")
     @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<Planogram> createPlanogram(@RequestBody Planogram planogram) {
-        System.out.println("Received request to create planogram: " + planogram);
+        System.out.println(STR."Received request to create planogram: \{planogram}");
         Planogram createdPlanogram = planogramService.createPlanogram(planogram);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPlanogram);
     }
@@ -56,8 +56,8 @@ public class PlanogramController {
             @RequestParam int productRow,
             @RequestParam int productSection,
             @RequestParam int quantity) {
-        System.out.println("Received product data: " + product);
-        System.out.println("Received planogramId: " + planogramId);
+        System.out.println(STR."Received product data: \{product}");
+        System.out.println(STR."Received planogramId: \{planogramId}");
 
         String result = planogramService.placeProduct(product, productRow, productSection, quantity, planogramId);
         if (result.equals("Product placed successfully")) {
@@ -74,4 +74,30 @@ public class PlanogramController {
         return ResponseEntity.ok(products);
     }
 
+    @DeleteMapping("/planogram/{planogramId}/product/{productId}/slot")
+    public ResponseEntity<String> deleteProductFromSlot(
+            @PathVariable Long productId,
+            @RequestParam int productRow,
+            @RequestParam int productSection,
+            @RequestParam int index,
+            @PathVariable Long planogramId) {
+        planogramService.deleteProductFromSlot(productId, productRow, productSection, planogramId, index);
+        return ResponseEntity.ok("Product deleted successfully");
+    }
+
+    @PutMapping("/products/{productId}")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long productId,
+            @RequestBody Product updatedProduct) {
+        try {
+            if (updatedProduct.getName() == null || updatedProduct.getHeight() <= 0 || updatedProduct.getBreadth() <= 0) {
+                throw new IllegalArgumentException("Invalid product data");
+            }
+            Product product = planogramService.updateProduct(productId, updatedProduct);
+            return ResponseEntity.ok(product);
+        } catch (Exception e) {
+            System.out.println("Bad Request");
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
