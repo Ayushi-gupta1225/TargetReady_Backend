@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.target.planogram.entity.*;
+import com.target.planogram.repository.*;
+
 @Service
 public class PlanogramService {
     @Autowired
@@ -26,13 +29,17 @@ public class PlanogramService {
     private ShelfOccupancyRepository shelfOccupancyRepository;
     @Autowired
     private PlanogramRepository planogramRepository;
+    @Autowired
+    private UserRepository userRepository; // Add this line
 
     @Transactional
-    public String placeProduct(Product product, int productRow, int productSection, int quantity, Long planogramId) {
+    public String placeProduct(Product product, int productRow, int productSection, int quantity, Long planogramId, Long userId) {
         Planogram planogram = planogramRepository.findById(planogramId).orElse(null);
         if (planogram == null) {
             return "Planogram not found";
         }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         int SHELF_CAPACITY = planogram.getSlotWidth();
         int SHELF_MAX_HEIGHT = planogram.getSlotHeight();
@@ -50,6 +57,7 @@ public class PlanogramService {
             if (product.getHeight() > SHELF_MAX_HEIGHT) {
                 return "Shelf height exceeded";
             }
+            product.setUser(user); // Set the user
             product = productRepository.save(product);
         }
 
@@ -78,7 +86,8 @@ public class PlanogramService {
         location.setProductSection(productSection);
         location.setQuantity(quantity);
         location.setPlanogram(planogram);
-        location.setIndex(newIndex); // Set the new index here
+        location.setIndex(newIndex);
+        location.setUser(user);
         locationRepository.save(location);
 
         return "Product placed successfully";
@@ -86,7 +95,7 @@ public class PlanogramService {
 
     @Transactional
     public Planogram createPlanogram(Planogram planogram) {
-        System.out.println(STR."Creating planogram with data: \{planogram}");
+        System.out.println("Creating planogram with data: " + planogram);
         return planogramRepository.save(planogram);
     }
 
@@ -101,8 +110,13 @@ public class PlanogramService {
         planogramRepository.deleteById(planogramId);
     }
 
+
     public List<Location> getAllLocations(Long planogramId) {
         return locationRepository.findByPlanogramId(planogramId);
+    }
+
+    public List<Location> getAllLocationsByUser(Long planogramId, Long userId) {
+        return locationRepository.findByPlanogramIdAndUserId(planogramId, userId);
     }
 
     public List<Product> getAllProducts() {
@@ -115,6 +129,11 @@ public class PlanogramService {
 
     public List<Product> getProductsByPlanogram(Long planogramId) {
         List<Location> locations = locationRepository.findByPlanogramId(planogramId);
+        return locations.stream().map(Location::getProduct).distinct().collect(Collectors.toList());
+    }
+
+    public List<Product> getProductsByPlanogramAndUser(Long planogramId, Long userId) {
+        List<Location> locations = locationRepository.findByPlanogramIdAndUserId(planogramId, userId);
         return locations.stream().map(Location::getProduct).distinct().collect(Collectors.toList());
     }
 
@@ -151,12 +170,10 @@ public class PlanogramService {
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        // Check if dimensions have changed
         boolean dimensionsChanged = existingProduct.getHeight() != updatedProduct.getHeight() ||
                 existingProduct.getBreadth() != updatedProduct.getBreadth();
 
         if (dimensionsChanged) {
-            // Validate new dimensions
             List<Location> locations = locationRepository.findByProduct(productId);
 
             for (Location location : locations) {
@@ -166,43 +183,38 @@ public class PlanogramService {
                 int totalProductBreadth = updatedProduct.getBreadth() * location.getQuantity();
 
                 if (totalProductBreadth > SHELF_CAPACITY) {
-                    throw new IllegalArgumentException(STR."Shelf capacity exceeded for location: \{location.getLocationId()}");
+                    throw new IllegalArgumentException("Shelf capacity exceeded for location: " + location.getLocationId());
                 }
                 if (updatedProduct.getHeight() > SHELF_MAX_HEIGHT) {
-                    throw new IllegalArgumentException(STR."Shelf height exceeded for location: \{location.getLocationId()}");
+                    throw new IllegalArgumentException("Shelf height exceeded for location: " + location.getLocationId());
                 }
 
-                // Check if the new dimensions fit in the current shelf occupancy
                 int shelfId = (location.getProductRow() - 1) * planogram.getNumSections() + location.getProductSection();
                 ShelfOccupancy shelfOccupancy = shelfOccupancyRepository.productSlotOccupancy(planogram.getPlanogramId(), shelfId)
-                        .orElseThrow(() -> new IllegalArgumentException(STR."Shelf occupancy not found for location: \{location.getLocationId()}"));
+                        .orElseThrow(() -> new IllegalArgumentException("Shelf occupancy not found for location: " + location.getLocationId()));
 
                 int currentOccupancy = shelfOccupancy.getOccupancy();
                 int existingProductBreadth = existingProduct.getBreadth() * location.getQuantity();
                 int newOccupancy = currentOccupancy - existingProductBreadth + totalProductBreadth;
 
                 if (newOccupancy > SHELF_CAPACITY) {
-                    throw new IllegalArgumentException(STR."Updated product exceeds shelf capacity for location: \{location.getLocationId()}");
+                    throw new IllegalArgumentException("Updated product exceeds shelf capacity for location: " + location.getLocationId());
                 }
 
-                // Update the shelf occupancy
                 shelfOccupancy.setOccupancy(newOccupancy);
                 shelfOccupancyRepository.save(shelfOccupancy);
             }
         }
 
-        // Update the fields of the existing product
         existingProduct.setName(updatedProduct.getName());
         existingProduct.setHeight(updatedProduct.getHeight());
         existingProduct.setBreadth(updatedProduct.getBreadth());
 
-        // Save the updated product
         return productRepository.save(existingProduct);
     }
 
-
     private void updateShelfOccupancyTable(Product product, Location location) {
-        int calculateShelf = (location.getProductRow()-1)*(location.getPlanogram().getNumSections())+location.getProductSection();
+        int calculateShelf = (location.getProductRow() - 1) * (location.getPlanogram().getNumSections()) + location.getProductSection();
 
         List<ShelfOccupancy> occupancies = shelfOccupancyRepository.findByPlanogramAndShelfId(location.getPlanogram().getPlanogramId(), calculateShelf);
 
@@ -215,6 +227,16 @@ public class PlanogramService {
 
     private int calculateNewOccupancy(Product product, Location location) {
         return location.getQuantity() * product.getBreadth();
+    }
+
+    @Transactional
+    public List<Location> getUserLocations(Long planogramId, Long userId) {
+        return locationRepository.findByPlanogramIdAndUserId(planogramId, userId);
+    }
+
+    @Transactional
+    public List<Product> getUserProducts(Long userId) {
+        return productRepository.findByUserId(userId);
     }
 }
 

@@ -1,7 +1,5 @@
 package com.target.planogram.repository;
 
-import com.target.planogram.entity.Planogram;
-import com.target.planogram.entity.Product;
 import com.target.planogram.entity.ShelfOccupancy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -35,5 +35,10 @@ public class Location {
 
     @Column(name = "slot_index", nullable = false)
     private int index;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
+
 

@@ -38,11 +38,16 @@ public class UserService {
             throw new RuntimeException("User with username " + user.getUsername() + " already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ROLE_USER"); // Default role for other users
+        user.setRole("ROLE_USER");
         return userRepository.save(user);
     }
 
     public List<User> getUsers() {
         return userRepository.findAll();
     }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUserName(username);
+    }
 }
+

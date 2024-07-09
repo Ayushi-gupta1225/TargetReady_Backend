@@ -21,7 +21,6 @@ public class PlanogramController {
     @PostMapping("/admin/planogram")
     @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<Planogram> createPlanogram(@RequestBody Planogram planogram) {
-        System.out.println(STR."Received request to create planogram: \{planogram}");
         Planogram createdPlanogram = planogramService.createPlanogram(planogram);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPlanogram);
     }
@@ -55,11 +54,10 @@ public class PlanogramController {
             @PathVariable Long planogramId,
             @RequestParam int productRow,
             @RequestParam int productSection,
-            @RequestParam int quantity) {
-        System.out.println(STR."Received product data: \{product}");
-        System.out.println(STR."Received planogramId: \{planogramId}");
+            @RequestParam int quantity,
+            @RequestParam Long userId) {
 
-        String result = planogramService.placeProduct(product, productRow, productSection, quantity, planogramId);
+        String result = planogramService.placeProduct(product, productRow, productSection, quantity, planogramId, userId);
         if (result.equals("Product placed successfully")) {
             return ResponseEntity.ok(result);
         } else {
@@ -71,6 +69,13 @@ public class PlanogramController {
     @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<List<Product>> getProductsByPlanogram(@PathVariable Long planogramId) {
         List<Product> products = planogramService.getProductsByPlanogram(planogramId);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/planogram/{planogramId}/products/{userId}")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<List<Product>> getProductsByPlanogramAndUser(@PathVariable Long planogramId, @PathVariable Long userId) {
+        List<Product> products = planogramService.getProductsByPlanogramAndUser(planogramId, userId);
         return ResponseEntity.ok(products);
     }
 
@@ -99,5 +104,15 @@ public class PlanogramController {
             System.out.println("Bad Request");
             return ResponseEntity.badRequest().build();
         }
+    }
+    @GetMapping("/planogram/{planogramId}/user-products/{userId}")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<Map<String, Object>> getUserProductsForPlanogram(
+            @PathVariable Long planogramId,
+            @PathVariable Long userId) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("locations", planogramService.getUserLocations(planogramId, userId));
+        data.put("products", planogramService.getUserProducts(userId));
+        return ResponseEntity.ok(data);
     }
 }

@@ -17,4 +17,9 @@ public class Product {
     private String name;
     private int height;
     private int breadth;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
+

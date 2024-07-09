@@ -48,6 +48,13 @@ public class JwtHelper {
         return doGenerateToken(claims, userDetails.getUsername());
     }
 
+    // Generate refresh token for user
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", userDetails.getAuthorities().stream().findFirst().get().getAuthority());
+        return doGenerateToken(claims, userDetails.getUsername(), JWT_TOKEN_VALIDITY * 24); // Longer validity for refresh token
+    }
+
     // While creating the token -
     // 1. Define claims of the token, like Issuer, Expiration, Subject, and the ID
     // 2. Sign the JWT using the HS512 algorithm and secret key.
@@ -58,9 +65,16 @@ public class JwtHelper {
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000)).signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
+    // Overloaded method to generate token with custom validity
+    private String doGenerateToken(Map<String, Object> claims, String subject, long validity) {
+        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + validity * 1000)).signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
+
     // Validate token
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }
+

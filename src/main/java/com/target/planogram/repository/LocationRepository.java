@@ -16,6 +16,9 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     @Query("SELECT l FROM Location l WHERE l.planogram.planogramId = :planogramId")
     List<Location> findByPlanogramId(@Param("planogramId") Long planogramId);
 
+    @Query("SELECT l FROM Location l WHERE l.planogram.planogramId = :planogramId AND l.user.userId = :userId")
+    List<Location> findByPlanogramIdAndUserId(@Param("planogramId") Long planogramId, @Param("userId") Long userId);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM Location l WHERE l.planogram.planogramId = :planogramId")
